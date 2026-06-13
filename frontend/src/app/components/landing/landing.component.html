@@ -1,0 +1,106 @@
+<div class="landing-container fade-in-up">
+  <!-- Navbar -->
+  <header class="navbar glass-panel">
+    <div class="logo">
+      <span class="pulse-dot"></span>
+      <span class="logo-text">AI Virtual <span class="highlight">HR</span></span>
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/" class="active">Home</a>
+      <a *ngIf="authService.isLoggedIn()" routerLink="/dashboard">Dashboard</a>
+      <a *ngIf="authService.isLoggedIn() && authService.isAdmin()" routerLink="/admin">Admin Panel</a>
+    </nav>
+    <div class="nav-auth">
+      <button *ngIf="!authService.isLoggedIn()" [routerLink]="['/login']" class="btn-cyber-outline">Sign In</button>
+      <button *ngIf="authService.isLoggedIn()" (click)="authService.logout()" class="btn-cyber-outline">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <span class="badge">Next-Gen AI Interview Prep</span>
+      <h1 class="hero-title">
+        Master Your Next Interview with <span class="gradient-text">Real-Time AI</span>
+      </h1>
+      <p class="hero-subtitle">
+        An immersive, intelligent interview simulator that records your responses, assesses your facial expressions, tracks eye contact, calculates speech metrics, and generates HR-grade grading feedback instantly.
+      </p>
+      <div class="hero-actions">
+        <button [routerLink]="[startedLink]" class="btn-cyber">
+          Get Started
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <a href="#features" class="btn-cyber-outline">Explore Tech Stack</a>
+      </div>
+    </div>
+
+    <!-- Interactive AI Telemetry Simulation Graphic -->
+    <div class="hero-visual">
+      <div class="telemetry-box glass-card pulse-glow">
+        <div class="telemetry-header">
+          <span class="live-tag">LIVE FEED</span>
+          <span class="status-indicator online"></span>
+        </div>
+        
+        <!-- Mock Avatar viewport -->
+        <div class="mock-viewport">
+          <div class="face-mesh"></div>
+          <span class="corner-border top-left"></span>
+          <span class="corner-border top-right"></span>
+          <span class="corner-border bottom-left"></span>
+          <span class="corner-border bottom-right"></span>
+        </div>
+
+        <div class="telemetry-stats">
+          <div class="stat-row">
+            <span>Emotion State:</span>
+            <span class="stat-val highlight">CONFIDENT (92%)</span>
+          </div>
+          <div class="stat-row">
+            <span>Eye Contact:</span>
+            <span class="stat-val success">MAINTAINED</span>
+          </div>
+          <div class="stat-row">
+            <span>Speech Pacing:</span>
+            <span class="stat-val text-cyan">136 WPM (IDEAL)</span>
+          </div>
+          <div class="stat-row">
+            <span>Confidence Rating:</span>
+            <span class="stat-val text-purple">EXCELLENT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid Section -->
+  <section id="features" class="features-section">
+    <h2 class="section-title">High-Fidelity AI Evaluation Metrics</h2>
+    <div class="dashboard-grid">
+      <div class="glass-card">
+        <div class="card-icon blue-glow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>Webcam Computer Vision</h3>
+        <p>Utilizes DeepFace and OpenCV models locally to analyze 7 micro-emotions and eye contact directly from base64 video frames, keeping data transmission secure.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon purple-glow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <h3>Speech NLP Matching</h3>
+        <p>Translates audio with Google Speech Recognition, analyzes vocabulary structure with spaCy and NLTK, and evaluates keyword density relative to standard model answers.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon cyan-glow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3>Granular Performance Review</h3>
+        <p>View interactive charts mapping communication clarity, speech rate, confidence, and keyword matching. Download a professional, HR-signed PDF summary report.</p>
+      </div>
+    </div>
+  </section>
+</div>

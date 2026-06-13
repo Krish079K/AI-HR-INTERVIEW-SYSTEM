@@ -1,0 +1,145 @@
+<div class="room-container fade-in-up">
+  <!-- Hidden Canvas for base64 Frame Grabs -->
+  <canvas #canvasElement width="640" height="480" style="display: none;"></canvas>
+
+  <!-- Left Side: AI Interrogator & Controls -->
+  <div class="ai-column glass-panel">
+    <!-- AI Avatar Widget -->
+    <div class="avatar-card">
+      <div class="avatar-wrapper" [class.speaking]="roomState === 'speaking'" [class.listening]="roomState === 'listening'" [class.processing]="roomState === 'processing'">
+        <div class="avatar-pulse inner"></div>
+        <div class="avatar-pulse middle"></div>
+        <div class="avatar-pulse outer"></div>
+        
+        <div class="avatar-image">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+        </div>
+      </div>
+      <div class="avatar-status">
+        <span class="status-badge" [class.speaking]="roomState === 'speaking'" [class.listening]="roomState === 'listening'" [class.processing]="roomState === 'processing'">
+          {{ roomState === 'loading' ? 'Loading AI Agent' :
+             roomState === 'ready' ? 'Ready to Start' :
+             roomState === 'speaking' ? 'AI Interviewer Speaking' :
+             roomState === 'listening' ? 'Listening to Response' :
+             roomState === 'processing' ? 'AI Processing Data' : 'Completed' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Question Board -->
+    <div class="question-board glass-card">
+      <div class="q-progress">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</div>
+      <h2 *ngIf="roomState !== 'ready' && roomState !== 'loading'" class="q-text">{{ questions[currentQuestionIndex]?.question_text }}</h2>
+      <h2 *ngIf="roomState === 'ready'" class="q-text-ready">Configure your webcam, check the microphone levels on the right, and click Start below when prepared.</h2>
+      <h2 *ngIf="roomState === 'loading'" class="q-text-ready">Initializing AI Interviewer Session...</h2>
+    </div>
+
+    <!-- Transcript Box -->
+    <div class="transcript-box glass-card">
+      <div class="t-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Live Transcription Preview</span>
+        <button 
+          *ngIf="roomState === 'listening' && !speechRecognitionFailed" 
+          (click)="enableManualInput()" 
+          style="background: none; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; text-decoration: underline; padding: 0;">
+          Type response manually
+        </button>
+      </div>
+      <div class="t-body">
+        <!-- Fallback textarea manual input if speech recognition fails -->
+        <textarea 
+          *ngIf="speechRecognitionFailed && (roomState === 'listening' || liveTranscript)"
+          [(ngModel)]="liveTranscript"
+          placeholder="Speech recognition is unavailable. Please type your response here..."
+          class="transcript-textarea">
+        </textarea>
+
+        <!-- Standard live preview if speech recognition works -->
+        <ng-container *ngIf="!speechRecognitionFailed">
+          <p *ngIf="liveTranscript">{{ liveTranscript }}</p>
+          <p *ngIf="!liveTranscript && roomState === 'listening'" class="t-placeholder">Speak now. Your transcript will appear here in real-time...</p>
+          <p *ngIf="roomState !== 'listening'" class="t-placeholder">Waiting for listening state to initiate...</p>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Main Controller Buttons -->
+    <div class="controls-card">
+      <button *ngIf="roomState === 'ready'" (click)="startInterviewSession()" class="btn-cyber btn-lg">Start Interview</button>
+      <button *ngIf="roomState === 'listening'" (click)="submitAnswer()" class="btn-cyber btn-lg">Submit Answer</button>
+      
+      <!-- Circle Loading indicator when processing -->
+      <div *ngIf="roomState === 'processing'" class="processing-spinner-box">
+        <span class="spinner"></span>
+        <span>Evaluating Speech & Emotions...</span>
+      </div>
+      <div *ngIf="roomState === 'loading'" class="processing-spinner-box">
+        <span class="spinner"></span>
+        <span>Connecting Camera & Microphones...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Candidate Webcam & Live Analysis Telemetry -->
+  <div class="candidate-column glass-panel">
+    <!-- Webcam Preview viewport -->
+    <div class="camera-card">
+      <div class="viewfinder-wrapper">
+        <video #videoElement autoplay playsinline muted></video>
+        
+        <!-- Live corner markers -->
+        <span class="corner-border top-left"></span>
+        <span class="corner-border top-right"></span>
+        <span class="corner-border bottom-left"></span>
+        <span class="corner-border bottom-right"></span>
+
+        <!-- Timer Circle Overlay (only in listening state) -->
+        <div *ngIf="roomState === 'listening'" class="timer-overlay glass-panel">
+          <div class="timer-circle" [class.warning]="timerValue <= 15">
+            <span class="timer-num">{{ timerValue }}</span>
+            <span class="timer-lbl">sec</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Microphones Waveform Visualizer -->
+    <div class="audio-waveform-card glass-card">
+      <div class="waveform-header">
+        <span>Mic Stream Frequency Waveform</span>
+        <span class="mic-status" [class.active]="roomState === 'listening'">
+          <span class="mic-dot"></span> {{ roomState === 'listening' ? 'Active' : 'Standby' }}
+        </span>
+      </div>
+      <div class="waveform-bars">
+        <div *ngFor="let bar of waveBars" class="wave-bar" [style.height.px]="bar"></div>
+      </div>
+    </div>
+
+    <!-- Live Analysis Telemetry Indicators -->
+    <div class="telemetry-card glass-card">
+      <div class="telemetry-card-title">Real-Time AI Telemetry Feedback</div>
+      
+      <div class="telemetry-grid">
+        <div class="telemetry-item glass-card">
+          <span class="item-lbl">Face Target</span>
+          <span class="item-val" [class.success]="currentEmotion !== 'Absent' && currentEmotion !== 'Detecting...'" [class.danger]="currentEmotion === 'Absent'">
+            {{ currentEmotion === 'Absent' ? 'LOST' : 'LOCK' }}
+          </span>
+        </div>
+
+        <div class="telemetry-item glass-card">
+          <span class="item-lbl">Gaze Direction</span>
+          <span class="item-val" [class.success]="eyeContactStatus === 'Maintained'" [class.warning]="eyeContactStatus === 'Looking Away'" [class.danger]="eyeContactStatus === 'Absent'">
+            {{ eyeContactStatus }}
+          </span>
+        </div>
+
+        <div class="telemetry-item glass-card">
+          <span class="item-lbl">Detected Emotion</span>
+          <span class="item-val highlight">{{ currentEmotion }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

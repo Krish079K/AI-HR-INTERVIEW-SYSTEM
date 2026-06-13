@@ -1,0 +1,30 @@
+# Node.js dependencies
+node_modules/
+dist/
+.angular/
+
+# Python dependencies & virtual environments
+backend/venv/
+backend/__pycache__/
+*.pyc
+backend/uploads/audio/*.wav
+backend/uploads/audio/*.webm
+backend/uploads/audio/*.ogg
+backend/uploads/resumes/*.pdf
+backend/uploads/resumes/*.doc
+backend/uploads/resumes/*.docx
+backend/uploads/report_*.pdf
+backend/interviewer.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor config
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

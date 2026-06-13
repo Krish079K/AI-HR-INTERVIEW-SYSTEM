@@ -1,0 +1,150 @@
+<div class="dashboard-wrapper fade-in-up">
+  <!-- Navbar -->
+  <header class="navbar glass-panel">
+    <div class="logo">
+      <span class="pulse-dot"></span>
+      <span class="logo-text">AI Virtual <span class="highlight">HR</span></span>
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a *ngIf="authService.isAdmin()" routerLink="/admin" routerLinkActive="active">Admin Panel</a>
+    </nav>
+    <div class="nav-auth">
+      <span class="user-pill glass-panel">{{ userName }}</span>
+      <button (click)="authService.logout()" class="btn-cyber-outline btn-sm">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Welcome Banner -->
+  <section class="welcome-section glass-panel">
+    <div class="welcome-text">
+      <h1>Welcome back, <span class="gradient-text">{{ userName }}</span></h1>
+      <p>Assess your capabilities, review AI critiques, and track your readiness for real HR encounters.</p>
+    </div>
+  </section>
+
+  <!-- Stats Grid -->
+  <section class="stats-container">
+    <div class="stat-card glass-card">
+      <div class="stat-icon blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M3 20h9M3 4h18M3 8h18M3 12h18M3 16h18"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Total Mock Interviews</span>
+        <span class="stat-value">{{ stats.totalInterviews }}</span>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Average Performance</span>
+        <span class="stat-value">{{ stats.avgScore }}%</span>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon cyan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Avg Technical Score</span>
+        <span class="stat-value">{{ stats.technicalAvg }}%</span>
+      </div>
+    </div>
+    <div class="stat-card glass-card">
+      <div class="stat-icon emerald">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Avg Communication Score</span>
+        <span class="stat-value">{{ stats.communicationAvg }}%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interview Categories -->
+  <section class="categories-section">
+    <h2 class="section-title">Initiate New Mock Interview</h2>
+    <div class="dashboard-grid">
+      <!-- HR Round -->
+      <div class="category-card glass-card">
+        <div class="category-badge hr">HR</div>
+        <h3>HR Round</h3>
+        <p>Covers standard personality, adaptability, career goals, salary expectations, and company alignment.</p>
+        <button (click)="startInterview('HR')" class="btn-cyber btn-full">Launch Session</button>
+      </div>
+
+      <!-- Technical Coding Round -->
+      <div class="category-card glass-card">
+        <div class="category-badge tech">TECH CODING</div>
+        <h3>Technical Coding Round</h3>
+        <p>Evaluates database indexing, OOP principles, REST APIs, Git conflict resolution, and complexity analysis.</p>
+        <button (click)="startInterview('Technical Coding')" class="btn-cyber btn-full">Launch Session</button>
+      </div>
+
+      <!-- Behavioral Round -->
+      <div class="category-card glass-card">
+        <div class="category-badge behav">BEHAVIORAL</div>
+        <h3>Behavioral Round</h3>
+        <p>Assesses teamwork conflict, learning from failures, working under pressure, and coworker assistance.</p>
+        <button (click)="startInterview('Behavioral')" class="btn-cyber btn-full">Launch Session</button>
+      </div>
+
+      <!-- Aptitude Test Round -->
+      <div class="category-card glass-card">
+        <div class="category-badge aptitude">APTITUDE</div>
+        <h3>Aptitude Test Round</h3>
+        <p>Tests quantitative ability, logical reasoning, distance-speed math, profit ratios, and probability.</p>
+        <button (click)="startInterview('Aptitude')" class="btn-cyber btn-full">Launch Session</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interview History -->
+  <section class="history-section">
+    <h2 class="section-title">Completed Interview Analytics</h2>
+    <div class="glass-panel history-table-container">
+      <div *ngIf="loading" class="loading-spinner-box">
+        <span class="spinner"></span>
+        <p>Retrieving session logs...</p>
+      </div>
+      
+      <div *ngIf="!loading && history.length === 0" class="no-history-box">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <p>No completed interviews found. Launch a session above to generate your first dashboard analytics!</p>
+      </div>
+
+      <table *ngIf="!loading && history.length > 0" class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Overall Score</th>
+            <th>Eye Contact</th>
+            <th>Communication</th>
+            <th>Technical</th>
+            <th class="actions-header">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of history" class="history-row">
+            <td>{{ item.created_at | date:'mediumDate' }}</td>
+            <td><span class="table-cat-badge">{{ item.category }}</span></td>
+            <td><span class="score-pill" [class.good]="item.overall_score >= 80" [class.avg]="item.overall_score >= 60 && item.overall_score < 80" [class.poor]="item.overall_score < 60">{{ item.overall_score }}%</span></td>
+            <td>{{ item.eye_contact_score }}%</td>
+            <td>{{ item.communication_score }}%</td>
+            <td>{{ item.technical_score }}%</td>
+            <td class="action-cells">
+              <button [routerLink]="['/result', item.id]" class="btn-cyber-outline btn-xs">Analytics</button>
+              <button (click)="downloadReport(item.id)" class="btn-cyber-outline btn-xs btn-pdf">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

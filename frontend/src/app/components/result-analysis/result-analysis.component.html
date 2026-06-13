@@ -1,0 +1,144 @@
+<div class="result-wrapper fade-in-up">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-box glass-panel">
+    <span class="spinner"></span>
+    <p>Generating detailed AI performance logs...</p>
+  </div>
+
+  <div *ngIf="!loading && interviewData" class="result-content">
+    <!-- Navbar / Header Actions -->
+    <header class="navbar glass-panel">
+      <div class="logo">
+        <span class="pulse-dot"></span>
+        <span class="logo-text">Assessment <span class="highlight">Results</span></span>
+      </div>
+      <div class="nav-auth">
+        <button routerLink="/dashboard" class="btn-cyber-outline">Dashboard</button>
+        <button (click)="downloadReport()" class="btn-cyber pdf-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+      </div>
+    </header>
+
+    <!-- Overall Summary Card -->
+    <section class="summary-section glass-panel">
+      <div class="summary-header">
+        <div>
+          <h1>Overall Score: <span class="gradient-text">{{ interviewData.overall_score }}%</span></h1>
+          <p>Session Category: <b>{{ interviewData.category }} Mock Interview</b></p>
+        </div>
+        <div class="rating-badge" [class.good]="interviewData.overall_score >= 80" [class.avg]="interviewData.overall_score >= 60 && interviewData.overall_score < 80" [class.poor]="interviewData.overall_score < 60">
+          {{ interviewData.overall_score >= 85 ? 'EXCELLENT' : interviewData.overall_score >= 70 ? 'COMPETENT' : 'NEEDS PRACTICE' }}
+        </div>
+      </div>
+      <div class="feedback-desc">
+        <h3>AI HR Interviewer Summary</h3>
+        <p>{{ interviewData.feedback_summary }}</p>
+      </div>
+    </section>
+
+    <!-- Score Blocks Grid -->
+    <section class="scores-grid">
+      <div class="score-card glass-card">
+        <span class="lbl">Technical</span>
+        <span class="val text-purple">{{ interviewData.technical_score }}%</span>
+      </div>
+      <div class="score-card glass-card">
+        <span class="lbl">Communication</span>
+        <span class="val text-cyan">{{ interviewData.communication_score }}%</span>
+      </div>
+      <div class="score-card glass-card">
+        <span class="lbl">Confidence</span>
+        <span class="val highlight">{{ interviewData.confidence_score }}%</span>
+      </div>
+      <div class="score-card glass-card">
+        <span class="lbl">Eye Contact</span>
+        <span class="val success">{{ interviewData.eye_contact_score }}%</span>
+      </div>
+    </section>
+
+    <!-- Charts Visualization Grid -->
+    <section class="charts-section">
+      <div class="chart-card glass-card">
+        <h3>Competency Vector</h3>
+        <div class="canvas-wrapper">
+          <canvas #radarCanvas></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card glass-card">
+        <h3>Facial Emotion Distribution</h3>
+        <div class="canvas-wrapper">
+          <canvas #doughnutCanvas></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Strengths & Weaknesses Section -->
+    <section class="strengths-weaknesses">
+      <div class="panel glass-card border-success">
+        <h3 class="success"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Key Strengths</h3>
+        <ul>
+          <li *ngIf="interviewData.technical_score >= 75"><b>Technical Competence:</b> Outstanding conceptual expression and keyword coverage.</li>
+          <li *ngIf="interviewData.communication_score >= 75"><b>Speech Articulation:</b> Highly professional vocal delivery with clean sentence pacing.</li>
+          <li *ngIf="interviewData.confidence_score >= 75"><b>Vocal Confidence:</b> Solid vocal authority, showing minimal pauses or hesitation.</li>
+          <li *ngIf="interviewData.eye_contact_score >= 75"><b>Facial Gaze:</b> Excellent camera engagement and eye contact.</li>
+          <li *ngIf="interviewData.overall_score < 75 && interviewData.technical_score < 75 && interviewData.communication_score < 75 && interviewData.confidence_score < 75 && interviewData.eye_contact_score < 75">
+            Participated fully in the interview session. Keep practicing to build high score strengths.
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel glass-card border-danger">
+        <h3 class="danger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Areas for Improvement</h3>
+        <ul>
+          <li *ngIf="interviewData.technical_score < 70"><b>Keyword Focus:</b> Elaborate on core concepts using standard technical terminology.</li>
+          <li *ngIf="interviewData.communication_score < 70"><b>Speech Pacing:</b> Calibrate speaking speed. Ideal is 120-150 words per minute.</li>
+          <li *ngIf="interviewData.confidence_score < 70"><b>Vocal Hesitations:</b> Reduce conversational gaps or silent pauses between thoughts.</li>
+          <li *ngIf="interviewData.eye_contact_score < 70"><b>Eye Contact:</b> Maintain better eye-camera coordination. Avoid reading screens.</li>
+          <li *ngIf="interviewData.overall_score >= 80 && interviewData.technical_score >= 70 && interviewData.communication_score >= 70 && interviewData.confidence_score >= 70 && interviewData.eye_contact_score >= 70">
+            Solid overall parameters! Focus on fine-tuning details for a perfect score.
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Detailed Question Log -->
+    <section class="detailed-log">
+      <h2>Detailed Response Logs</h2>
+      
+      <div *ngFor="let r of responses; let i = index" class="q-log-card glass-panel">
+        <div class="log-header">
+          <span class="q-badge">Question {{ i + 1 }}</span>
+          <h3>{{ r.question_text }}</h3>
+        </div>
+
+        <div class="log-details-grid">
+          <div class="transcript-column">
+            <h4>Candidate Transcript</h4>
+            <div class="transcript-box-inner">
+              "{{ r.transcript || '[No speech detected]' }}"
+            </div>
+          </div>
+
+          <div class="metrics-column">
+            <h4>AI Score telemetry</h4>
+            <div class="metrics-bullets">
+              <div class="metric-row"><span>Speaking Rate:</span> <b>{{ r.speaking_speed }} WPM</b></div>
+              <div class="metric-row"><span>Eye Contact:</span> <b>{{ r.eye_contact_ratio }}%</b></div>
+              <div class="metric-row"><span>Technical:</span> <b>{{ r.technical_score | number:'1.0-0' }}%</b></div>
+              <div class="metric-row"><span>Communication:</span> <b>{{ r.communication_score | number:'1.0-0' }}%</b></div>
+              <div class="metric-row"><span>Confidence:</span> <b>{{ r.confidence_score | number:'1.0-0' }}%</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-critique">
+          <h4>AI Recommendation Feedback</h4>
+          <p>{{ r.feedback }}</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

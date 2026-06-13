@@ -1,0 +1,174 @@
+<div class="admin-wrapper fade-in-up">
+  <!-- Navbar -->
+  <header class="navbar glass-panel">
+    <div class="logo">
+      <span class="pulse-dot"></span>
+      <span class="logo-text">Admin <span class="highlight">Panel</span></span>
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/">Home</a>
+      <a routerLink="/dashboard">Dashboard</a>
+      <a routerLink="/admin" class="active">Admin Panel</a>
+    </nav>
+    <div class="nav-auth">
+      <span class="user-pill glass-panel">System Administrator</span>
+      <button (click)="authService.logout()" class="btn-cyber-outline btn-sm">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Platform Stats Widgets -->
+  <section class="stats-row">
+    <div class="stat-card glass-card">
+      <div class="stat-icon blue">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Total Candidates</span>
+        <span class="stat-value" *ngIf="!loadingStats">{{ stats.total_candidates }}</span>
+        <span class="spinner-xs" *ngIf="loadingStats"></span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-card">
+      <div class="stat-icon purple">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Interviews Run</span>
+        <span class="stat-value" *ngIf="!loadingStats">{{ stats.total_interviews }}</span>
+        <span class="spinner-xs" *ngIf="loadingStats"></span>
+      </div>
+    </div>
+
+    <div class="stat-card glass-card">
+      <div class="stat-icon cyan">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Avg System Grade</span>
+        <span class="stat-value" *ngIf="!loadingStats">{{ stats.average_score }}%</span>
+        <span class="spinner-xs" *ngIf="loadingStats"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split Panel Cockpit -->
+  <div class="admin-cockpit-grid">
+    
+    <!-- LEFT PANEL: Question CRUD & List -->
+    <div class="questions-column glass-panel">
+      <!-- Form to Create/Edit Questions -->
+      <div id="question-form-section" class="form-wrapper glass-card">
+        <h3>{{ isEditing ? 'Edit Interview Question' : 'Add New Interview Question' }}</h3>
+        
+        <div *ngIf="formErrorMessage" class="form-banner error">{{ formErrorMessage }}</div>
+        <div *ngIf="formSuccessMessage" class="form-banner success">{{ formSuccessMessage }}</div>
+
+        <form [formGroup]="questionForm" (ngSubmit)="onSaveQuestion()" class="question-form">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="category">Category</label>
+              <select id="category" formControlName="category">
+                <option value="HR">HR Round</option>
+                <option value="Technical Coding">Technical Coding Round</option>
+                <option value="Behavioral">Behavioral Round</option>
+                <option value="Aptitude">Aptitude Test Round</option>
+              </select>
+            </div>
+            
+            <div class="form-group flex-3">
+              <label for="keywords">Target Grading Keywords (Comma Separated)</label>
+              <input type="text" id="keywords" formControlName="keywords" placeholder="class, object, encapsulation, inheritance" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="question_text">Question Text</label>
+            <textarea id="question_text" formControlName="question_text" placeholder="Enter the exact question the AI TTS will speak..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="ideal_answer">Ideal Model Answer (For Semantic Matching)</label>
+            <textarea id="ideal_answer" formControlName="ideal_answer" placeholder="Provide a standard model answer to compute semantic vector similarity scores..."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-cyber" [disabled]="questionForm.invalid">
+              {{ isEditing ? 'Update Question' : 'Save Question' }}
+            </button>
+            <button type="button" *ngIf="isEditing" (click)="resetForm()" class="btn-cyber-outline">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Question List Table -->
+      <div class="questions-list-wrapper">
+        <h3>Question Library Repository</h3>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Question</th>
+                <th>Keywords</th>
+                <th class="actions-header">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let q of questions">
+                <td><span class="table-cat-badge">{{ q.category }}</span></td>
+                <td class="q-cell"><b>{{ q.question_text }}</b></td>
+                <td class="kw-cell"><i>{{ q.keywords }}</i></td>
+                <td class="action-cells">
+                  <button (click)="onEditQuestion(q)" class="btn-cyber-outline btn-xs">Edit</button>
+                  <button (click)="onDeleteQuestion(q.id)" class="btn-cyber-outline btn-xs btn-del">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Candidate Logs -->
+    <div class="candidates-column glass-panel">
+      <h3>Registered Platform Candidates</h3>
+      
+      <div *ngIf="loadingCandidates" class="loading-spinner-box">
+        <span class="spinner"></span>
+        <p>Retrieving candidates roster...</p>
+      </div>
+
+      <div *ngIf="!loadingCandidates && candidates.length === 0" class="no-history-box">
+        <p>No candidates registered on this platform yet.</p>
+      </div>
+
+      <div *ngIf="!loadingCandidates && candidates.length > 0" class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Interviews Completed</th>
+              <th>Average Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of candidates">
+              <td><b>{{ c.name }}</b></td>
+              <td>{{ c.email }}</td>
+              <td class="center-text">{{ c.interviews_count }}</td>
+              <td>
+                <span *ngIf="c.interviews_count > 0" class="score-pill" [class.good]="c.avg_score >= 80" [class.avg]="c.avg_score >= 60 && c.avg_score < 80" [class.poor]="c.avg_score < 60">
+                  {{ c.avg_score | number:'1.0-0' }}%
+                </span>
+                <span *ngIf="c.interviews_count === 0" class="no-score">N/A</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
