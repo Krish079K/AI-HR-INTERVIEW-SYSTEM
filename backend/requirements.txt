@@ -13,3 +13,4 @@ numpy==1.26.4
 gtts==2.5.1
 werkzeug==3.0.1
 PyMySQL==1.1.0
+psycopg2-binary==2.9.12

@@ -1,6 +1,7 @@
 import sqlite3
 import pymysql
 import pymysql.err
+import psycopg2
 import os
 from werkzeug.security import generate_password_hash
 from config import Config
@@ -9,9 +10,9 @@ from config import Config
 class DBIntegrityError(Exception):
     pass
 
-class MySQLRow:
+class UnifiedRow:
     """
-    Adapter to wrap PyMySQL row tuples, supporting both index-based
+    Adapter to wrap MySQL/PostgreSQL row tuples, supporting both index-based
     and case-insensitive key-based lookup, as well as dict conversion.
     """
     def __init__(self, raw_tuple, description):
@@ -60,17 +61,20 @@ class QueryNormalizerCursor:
         self.db_type = db_type
 
     def execute(self, query, params=None):
-        # PRAGMA commands are SQLite-specific, ignore them on MySQL
-        if self.db_type == 'mysql' and 'PRAGMA' in query:
+        # PRAGMA commands are SQLite-specific, ignore them on MySQL & PostgreSQL
+        if self.db_type in ('mysql', 'postgres') and 'PRAGMA' in query:
             return self
 
         # Normalize query placeholders and random function names
         if self.db_type == 'sqlite':
             query = query.replace('%s', '?')
             query = query.replace('ORDER BY RAND()', 'ORDER BY RANDOM()')
-        else:
+        elif self.db_type == 'mysql':
             query = query.replace('?', '%s')
             query = query.replace('ORDER BY RANDOM()', 'ORDER BY RAND()')
+        elif self.db_type == 'postgres':
+            query = query.replace('?', '%s')
+            query = query.replace('ORDER BY RAND()', 'ORDER BY RANDOM()')
 
         try:
             if params is not None:
@@ -78,7 +82,7 @@ class QueryNormalizerCursor:
             else:
                 self.cursor.execute(query)
             return self
-        except (sqlite3.IntegrityError, pymysql.err.IntegrityError) as e:
+        except (sqlite3.IntegrityError, pymysql.err.IntegrityError, psycopg2.IntegrityError) as e:
             raise DBIntegrityError(str(e))
 
     def executemany(self, query, seq_of_params):
@@ -90,24 +94,24 @@ class QueryNormalizerCursor:
         try:
             self.cursor.executemany(query, seq_of_params)
             return self
-        except (sqlite3.IntegrityError, pymysql.err.IntegrityError) as e:
+        except (sqlite3.IntegrityError, pymysql.err.IntegrityError, psycopg2.IntegrityError) as e:
             raise DBIntegrityError(str(e))
 
     def fetchone(self):
         row = self.cursor.fetchone()
         if row is None:
             return None
-        if self.db_type == 'mysql':
-            return MySQLRow(row, self.cursor.description)
+        if self.db_type in ('mysql', 'postgres'):
+            return UnifiedRow(row, self.cursor.description)
         return row
 
     def fetchall(self):
         rows = self.cursor.fetchall()
         if rows is None:
             return []
-        if self.db_type == 'mysql':
+        if self.db_type in ('mysql', 'postgres'):
             desc = self.cursor.description
-            return [MySQLRow(row, desc) for row in rows]
+            return [UnifiedRow(row, desc) for row in rows]
         return rows
 
     @property
@@ -161,9 +165,7 @@ def get_db_connection():
                 database=database
             )
         except pymysql.err.OperationalError as e:
-            # Error 1049 is "Unknown database"
             if len(e.args) > 0 and e.args[0] == 1049:
-                # Create the database first
                 temp_conn = pymysql.connect(
                     host=host,
                     port=port,
@@ -174,7 +176,6 @@ def get_db_connection():
                 temp_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
                 temp_conn.commit()
                 temp_conn.close()
-                # Connect to the newly created database
                 raw_conn = pymysql.connect(
                     host=host,
                     port=port,
@@ -185,6 +186,48 @@ def get_db_connection():
             else:
                 raise e
         return QueryNormalizerConnection(raw_conn, 'mysql')
+        
+    elif db_type == 'postgres':
+        host = getattr(Config, 'POSTGRES_HOST', 'localhost')
+        port = getattr(Config, 'POSTGRES_PORT', 5432)
+        user = getattr(Config, 'POSTGRES_USER', 'postgres')
+        password = getattr(Config, 'POSTGRES_PASSWORD', '')
+        database = getattr(Config, 'POSTGRES_DB', 'ai_interviewer')
+        
+        try:
+            raw_conn = psycopg2.connect(
+                host=host,
+                port=port,
+                user=user,
+                password=password,
+                database=database
+            )
+        except psycopg2.OperationalError as e:
+            if "database" in str(e) and "does not exist" in str(e):
+                # Connect to default postgres DB to create the database
+                temp_conn = psycopg2.connect(
+                    host=host,
+                    port=port,
+                    user=user,
+                    password=password,
+                    database='postgres'
+                )
+                temp_conn.autocommit = True
+                temp_cursor = temp_conn.cursor()
+                temp_cursor.execute(f"CREATE DATABASE {database}")
+                temp_conn.close()
+                # Reconnect to the newly created database
+                raw_conn = psycopg2.connect(
+                    host=host,
+                    port=port,
+                    user=user,
+                    password=password,
+                    database=database
+                )
+            else:
+                raise e
+        return QueryNormalizerConnection(raw_conn, 'postgres')
+        
     else:
         raw_conn = sqlite3.connect(Config.DATABASE)
         raw_conn.row_factory = sqlite3.Row
@@ -258,6 +301,70 @@ def init_db():
             FOREIGN KEY (question_id) REFERENCES questions (id)
         );
         ''')
+        
+    elif db_type == 'postgres':
+        # 1. Create Users Table (PostgreSQL)
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(50) DEFAULT 'candidate',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        ''')
+        
+        # 2. Create Questions Table (PostgreSQL)
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS questions (
+            id SERIAL PRIMARY KEY,
+            category VARCHAR(100) NOT NULL,
+            question_text TEXT NOT NULL,
+            keywords VARCHAR(500) NOT NULL,
+            ideal_answer TEXT
+        );
+        ''')
+        
+        # 3. Create Interviews Table (PostgreSQL)
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS interviews (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            status VARCHAR(50) DEFAULT 'in_progress',
+            overall_score DOUBLE PRECISION DEFAULT 0.0,
+            confidence_score DOUBLE PRECISION DEFAULT 0.0,
+            technical_score DOUBLE PRECISION DEFAULT 0.0,
+            communication_score DOUBLE PRECISION DEFAULT 0.0,
+            eye_contact_score DOUBLE PRECISION DEFAULT 0.0,
+            feedback_summary TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+        ''')
+        
+        # 4. Create Responses Table (PostgreSQL)
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS responses (
+            id SERIAL PRIMARY KEY,
+            interview_id INT NOT NULL,
+            question_id INT NOT NULL,
+            transcript TEXT,
+            audio_path VARCHAR(500),
+            speaking_speed DOUBLE PRECISION DEFAULT 0.0,
+            eye_contact_ratio DOUBLE PRECISION DEFAULT 0.0,
+            confidence_score DOUBLE PRECISION DEFAULT 0.0,
+            communication_score DOUBLE PRECISION DEFAULT 0.0,
+            technical_score DOUBLE PRECISION DEFAULT 0.0,
+            emotions_json TEXT,
+            feedback TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (interview_id) REFERENCES interviews (id) ON DELETE CASCADE,
+            FOREIGN KEY (question_id) REFERENCES questions (id)
+        );
+        ''')
+        
     else:
         # Enable foreign keys in SQLite
         cursor.execute("PRAGMA foreign_keys = ON;")

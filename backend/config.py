@@ -36,13 +36,21 @@ class Config:
     MAIL_USERNAME = ''  # Enter your sender gmail here (e.g. 'sender@gmail.com')
     MAIL_PASSWORD = ''  # Enter your Google App Password here
 
-    # Database Selection (sqlite or mysql)
+    # Database Selection (sqlite, mysql, or postgres)
     DB_TYPE = os.environ.get('DB_TYPE', 'sqlite')
 
-    # MySQL Configurations (ignored if DB_TYPE is 'sqlite')
+    # MySQL Configurations (ignored if DB_TYPE is not 'mysql')
     MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
     MYSQL_PORT = int(os.environ.get('MYSQL_PORT', 3306))
     MYSQL_USER = os.environ.get('MYSQL_USER', 'root')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
     MYSQL_DB = os.environ.get('MYSQL_DB', 'ai_interviewer')
+
+    # PostgreSQL Configurations (ignored if DB_TYPE is not 'postgres')
+    POSTGRES_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
+    POSTGRES_PORT = int(os.environ.get('POSTGRES_PORT', 5432))
+    POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
+    POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
+    POSTGRES_DB = os.environ.get('POSTGRES_DB', 'ai_interviewer')
+
 
