@@ -40,3 +40,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# JDKs and setup scripts
+/jdk-17/
+/jdk-21/
+/setup_jdk.ps1
+/setup_jdk21.ps1
