@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://your-backend-url.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!api|assets|.*\\.).*)",
+      "destination": "/index.html"
     }
   ]
 }
