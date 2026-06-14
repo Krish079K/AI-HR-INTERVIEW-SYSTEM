@@ -1,5 +1,5 @@
 import unittest
-from database import MySQLRow, QueryNormalizerCursor, DBIntegrityError
+from database import UnifiedRow, QueryNormalizerCursor, DBIntegrityError
 
 class MockRawCursor:
     def __init__(self):
@@ -29,7 +29,7 @@ class TestDBNormalizer(unittest.TestCase):
     def test_mysql_row_access(self):
         raw_tuple = (42, 'Alice', 'alice@test.com')
         desc = [('id', 3), ('name', 253), ('email', 253)]
-        row = MySQLRow(raw_tuple, desc)
+        row = UnifiedRow(raw_tuple, desc)
 
         # Index access
         self.assertEqual(row[0], 42)

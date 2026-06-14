@@ -27,11 +27,45 @@ except ImportError:
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
-    nltk.download('punkt', quiet=True)
+    try:
+        nltk.download('punkt', quiet=True)
+    except Exception as e:
+        print(f"Warning: Failed to download NLTK tokenizers/punkt: {e}")
 try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
-    nltk.download('stopwords', quiet=True)
+    try:
+        nltk.download('stopwords', quiet=True)
+    except Exception as e:
+        print(f"Warning: Failed to download NLTK corpora/stopwords: {e}")
+
+def safe_word_tokenize(text):
+    try:
+        return word_tokenize(text)
+    except Exception as e:
+        print(f"Warning: NLTK word_tokenize failed: {e}. Using regex fallback.")
+        import re
+        return re.findall(r'\w+|[^\w\s]', text)
+
+def safe_get_stopwords():
+    try:
+        return set(stopwords.words('english'))
+    except Exception as e:
+        print(f"Warning: NLTK stopwords failed: {e}. Using default set fallback.")
+        return {
+            "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", 
+            "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", 
+            "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", 
+            "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", 
+            "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", 
+            "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", 
+            "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", 
+            "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", 
+            "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", 
+            "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", 
+            "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", 
+            "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"
+        }
 
 # Load spaCy model
 nlp = None
@@ -117,8 +151,8 @@ def analyze_speech_content(transcript, target_keywords, ideal_answer=None):
     matched_keywords = []
     
     # Simple check and lemmatization match
-    tokens = word_tokenize(transcript_lower)
-    stop_words = set(stopwords.words('english'))
+    tokens = safe_word_tokenize(transcript_lower)
+    stop_words = safe_get_stopwords()
     filtered_tokens = [w for w in tokens if w.isalnum() and w not in stop_words]
     
     # Parse with spacy if available for better lemmatization
@@ -192,7 +226,7 @@ def analyze_communication(transcript, duration, rms, std_dev):
             "confidence_score": 0.0
         }
         
-    words = [w for w in word_tokenize(transcript) if w.isalnum()]
+    words = [w for w in safe_word_tokenize(transcript) if w.isalnum()]
     word_count = len(words)
     
     # Calculate WPM
