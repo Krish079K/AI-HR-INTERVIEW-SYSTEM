@@ -5,9 +5,23 @@ import speech_recognition as sr
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+
+# Load spaCy dynamically
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    print("Warning: spaCy library not found. Lemmatization will fall back.")
+
+# Load scikit-learn dynamically
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    print("Warning: scikit-learn library not found. Cosine similarity will fall back.")
 
 # Ensure NLTK data is downloaded
 try:
@@ -20,15 +34,17 @@ except LookupError:
     nltk.download('stopwords', quiet=True)
 
 # Load spaCy model
-try:
-    nlp = spacy.load("en_core_web_md")
-except OSError:
-    # Fallback to small model if medium isn't installed
+nlp = None
+if SPACY_AVAILABLE:
     try:
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load("en_core_web_md")
     except OSError:
-        nlp = None
-        print("Warning: spaCy model not found. Semantic similarity will fall back to TF-IDF.")
+        # Fallback to small model if medium isn't installed
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            nlp = None
+            print("Warning: spaCy model not found. Semantic similarity will fall back to TF-IDF.")
 
 def get_audio_duration_and_amplitude(audio_path):
     """
@@ -133,13 +149,23 @@ def analyze_speech_content(transcript, target_keywords, ideal_answer=None):
             if doc_user.vector_norm and doc_ideal.vector_norm:
                 similarity_score = doc_user.similarity(doc_ideal) * 100.0
         else:
-            # Fallback to TF-IDF Cosine Similarity
+            # Fallback to TF-IDF Cosine Similarity if sklearn is available, otherwise use simple word overlap
             try:
-                vectorizer = TfidfVectorizer()
-                tfidf = vectorizer.fit_transform([transcript_lower, ideal_answer.lower()])
-                similarity_score = (tfidf * tfidf.T).A[0, 1] * 100.0
+                if SKLEARN_AVAILABLE:
+                    vectorizer = TfidfVectorizer()
+                    tfidf = vectorizer.fit_transform([transcript_lower, ideal_answer.lower()])
+                    similarity_score = (tfidf * tfidf.T).A[0, 1] * 100.0
+                else:
+                    # Simple word overlap similarity fallback
+                    user_words = set(transcript_lower.split())
+                    ideal_words = set(ideal_answer.lower().split())
+                    if not ideal_words:
+                        similarity_score = 100.0
+                    else:
+                        overlap = len(user_words.intersection(ideal_words))
+                        similarity_score = (overlap / len(ideal_words)) * 100.0
             except Exception as e:
-                print(f"TF-IDF calculation error: {e}")
+                print(f"Similarity calculation error: {e}")
                 similarity_score = 50.0 # moderate baseline fallback
                 
     return {
