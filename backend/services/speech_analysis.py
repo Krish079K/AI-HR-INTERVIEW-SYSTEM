@@ -32,6 +32,13 @@ except LookupError:
     except Exception as e:
         print(f"Warning: Failed to download NLTK tokenizers/punkt: {e}")
 try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    try:
+        nltk.download('punkt_tab', quiet=True)
+    except Exception as e:
+        print(f"Warning: Failed to download NLTK tokenizers/punkt_tab: {e}")
+try:
     nltk.data.find('corpora/stopwords')
 except LookupError:
     try:
