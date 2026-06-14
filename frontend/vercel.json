@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-backend-url.onrender.com/api/:path*"
+      "destination": "https://krishnakumar0507.pythonanywhere.com/api/:path*"
     },
     {
       "source": "/((?!api|assets|.*\\.).*)",
