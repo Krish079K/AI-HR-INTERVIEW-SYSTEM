@@ -153,7 +153,11 @@ export class AuthComponent {
         },
         error: (err) => {
           this.loading = false;
-          this.errorMessage = err.error?.message || "Login failed. Please check credentials.";
+          if (err.status === 0 || err.status === 502 || err.status === 504 || err.status === 503) {
+            this.errorMessage = "Unable to connect to the backend server. Please check your backend deployment.";
+          } else {
+            this.errorMessage = err.error?.message || "Login failed. Please check credentials.";
+          }
         }
       });
     } else {
@@ -164,7 +168,11 @@ export class AuthComponent {
         },
         error: (err) => {
           this.loading = false;
-          this.errorMessage = err.error?.message || "Signup failed. Email might already be in use.";
+          if (err.status === 0 || err.status === 502 || err.status === 504 || err.status === 503) {
+            this.errorMessage = "Unable to connect to the backend server. Please check your backend deployment.";
+          } else {
+            this.errorMessage = err.error?.message || "Signup failed. Email might already be in use.";
+          }
         }
       });
     }
