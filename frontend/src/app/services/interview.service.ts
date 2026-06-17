@@ -8,7 +8,11 @@ import { environment } from '../../environments/environment';
 })
 export class InterviewService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/interviews`;
+  
+  get apiUrl(): string {
+    const customUrl = localStorage.getItem('customApiUrl');
+    return `${customUrl || environment.apiUrl}/interviews`;
+  }
 
   getQuestions(category: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/questions?category=${category}`);

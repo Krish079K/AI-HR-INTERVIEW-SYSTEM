@@ -13,6 +13,76 @@ from services.report_generator import generate_pdf_report
 
 interviews_bp = Blueprint('interviews', __name__)
 
+def generate_questions_with_gemini(category):
+    import urllib.request
+    import urllib.error
+    
+    api_key = Config.GEMINI_API_KEY
+    if not api_key:
+        print("Gemini API key is not configured. Falling back to pre-seeded questions.")
+        return None
+        
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    prompt = f"""
+    Generate exactly 4 unique, professional interview questions for the category '{category}' for an AI Virtual HR Interviewer.
+    Each question must be challenging, professional, and completely unique.
+    For each question, provide:
+    1. The question text.
+    2. A comma-separated list of 3-5 core technical or conceptual keywords that are critical to a good answer.
+    3. An ideal comprehensive answer (about 3-4 sentences long) that contains those keywords, which will be used to grade the candidate's response.
+    
+    Return the output strictly in a valid JSON array format, where each object has these exact keys:
+    "question_text", "keywords", and "ideal_answer". Do not wrap the JSON in markdown code blocks or add any additional text.
+    """
+    
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": prompt}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+        
+        # Use 12 seconds timeout to be safe
+        with urllib.request.urlopen(req, timeout=12) as response:
+            res_body = response.read().decode('utf-8')
+            res_json = json.loads(res_body)
+            
+            # Extract text
+            candidate_text = res_json['candidates'][0]['content']['parts'][0]['text']
+            
+            # Clean up markdown formatting if present
+            text = candidate_text.strip()
+            if text.startswith("```"):
+                lines = text.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                text = "\n".join(lines).strip()
+                
+            questions_list = json.loads(text)
+            if isinstance(questions_list, list) and len(questions_list) > 0:
+                return questions_list
+            return None
+    except Exception as e:
+        print(f"Error calling Gemini API: {e}. Falling back to pre-seeded questions.")
+        return None
+
 @interviews_bp.route('/questions', methods=['GET'])
 @jwt_required()
 def get_questions():
@@ -20,14 +90,50 @@ def get_questions():
     if not category:
         return jsonify({"message": "Category parameter is required"}), 400
         
+    gemini_qs = None
+    if Config.GEMINI_API_KEY:
+        gemini_qs = generate_questions_with_gemini(category)
+        
     conn = get_db_connection()
     cursor = conn.cursor()
+    
     try:
+        if gemini_qs:
+            inserted_qs = []
+            for q in gemini_qs:
+                question_text = q.get('question_text')
+                keywords = q.get('keywords')
+                ideal_answer = q.get('ideal_answer')
+                
+                if not question_text or not keywords or not ideal_answer:
+                    continue
+                    
+                cursor.execute(
+                    "INSERT INTO questions (category, question_text, keywords, ideal_answer) VALUES (?, ?, ?, ?)",
+                    (category, question_text, keywords, ideal_answer)
+                )
+                inserted_qs.append({
+                    "id": cursor.lastrowid,
+                    "category": category,
+                    "question_text": question_text,
+                    "keywords": keywords
+                })
+            conn.commit()
+            if len(inserted_qs) > 0:
+                return jsonify(inserted_qs), 200
+                
+        # Fallback to standard random database select
         cursor.execute("SELECT id, category, question_text, keywords FROM questions WHERE category = ? ORDER BY RANDOM() LIMIT 4", (category,))
         questions = cursor.fetchall()
         return jsonify([dict(q) for q in questions]), 200
     except Exception as e:
-        return jsonify({"message": f"Database error: {str(e)}"}), 500
+        # Fallback to standard database select if anything fails
+        try:
+            cursor.execute("SELECT id, category, question_text, keywords FROM questions WHERE category = ? ORDER BY RANDOM() LIMIT 4", (category,))
+            questions = cursor.fetchall()
+            return jsonify([dict(q) for q in questions]), 200
+        except Exception as db_err:
+            return jsonify({"message": f"Database error: {str(db_err)}"}), 500
     finally:
         conn.close()
 

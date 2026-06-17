@@ -2,10 +2,58 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import json
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from config import Config
 from database import get_db_connection, DBIntegrityError
- 
+
 auth_bp = Blueprint('auth', __name__)
- 
+
+PENDING_REGISTRATIONS = {}
+RESET_CODES = {}
+
+def send_otp_email(to_email, code):
+    mail_server = getattr(Config, 'MAIL_SERVER', 'smtp.gmail.com')
+    mail_port = getattr(Config, 'MAIL_PORT', 587)
+    mail_username = getattr(Config, 'MAIL_USERNAME', '')
+    mail_password = getattr(Config, 'MAIL_PASSWORD', '')
+    
+    if not mail_username or not mail_password:
+        print(f"SMTP Credentials not configured. Simulated signup OTP for {to_email}: {code}")
+        return False
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = mail_username
+        msg['To'] = to_email
+        msg['Subject'] = "AI Virtual HR Interviewer - Registration Verification Code"
+        
+        body = f"""Hello,
+
+Thank you for registering at the AI Virtual HR Interviewer platform.
+
+Your 6-digit email verification code is: {code}
+
+Please enter this code on the registration page to complete your account creation.
+
+Best regards,
+AI Virtual HR Interviewer Team
+"""
+        msg.attach(MIMEText(body, 'plain'))
+        
+        server = smtplib.SMTP(mail_server, mail_port)
+        server.starttls()
+        server.login(mail_username, mail_password)
+        server.send_message(msg)
+        server.quit()
+        print(f"Verification email successfully sent to {to_email}")
+        return True
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
+        return False
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -19,7 +67,61 @@ def register():
     if not name or not email or not password:
         return jsonify({"message": "Missing name, email, or password"}), 400
         
-    password_hash = generate_password_hash(password)
+    if len(password) < 6:
+        return jsonify({"message": "Password must be at least 6 characters"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email,))
+        if cursor.fetchone():
+            return jsonify({"message": "User with this email already exists"}), 409
+            
+        password_hash = generate_password_hash(password)
+        
+        # Generate 6-digit OTP
+        code = str(random.randint(100000, 999999))
+        PENDING_REGISTRATIONS[email] = {
+            'name': name,
+            'password_hash': password_hash,
+            'otp': code
+        }
+        
+        # Send OTP email
+        email_sent = send_otp_email(email, code)
+        
+        message_detail = "Verification code generated."
+        if email_sent:
+            message_detail += " Verification code has been sent to your email."
+        else:
+            message_detail += " Simulated dispatch (check dev console or copy code below)."
+            
+        return jsonify({
+            "message": message_detail,
+            "email": email,
+            "code": code,
+            "email_sent": email_sent
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
+
+@auth_bp.route('/register-verify', methods=['POST'])
+def register_verify():
+    data = request.get_json()
+    if not data or not all(k in data for k in ('email', 'code')):
+        return jsonify({"message": "Missing email or verification code"}), 400
+        
+    email = data.get('email', '').strip().lower()
+    code = data.get('code').strip()
+    
+    if email not in PENDING_REGISTRATIONS or PENDING_REGISTRATIONS[email]['otp'] != code:
+        return jsonify({"message": "Invalid or expired verification code."}), 400
+        
+    pending = PENDING_REGISTRATIONS[email]
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -27,7 +129,7 @@ def register():
     try:
         cursor.execute(
             "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'candidate')",
-            (name, email, password_hash)
+            (pending['name'], email, pending['password_hash'])
         )
         conn.commit()
         
@@ -35,10 +137,13 @@ def register():
         user_id = cursor.lastrowid
         access_token = create_access_token(identity=json.dumps({"id": user_id, "email": email, "role": "candidate"}))
         
+        # Remove from pending list
+        PENDING_REGISTRATIONS.pop(email, None)
+        
         return jsonify({
             "message": "User registered successfully",
             "token": access_token,
-            "user": {"id": user_id, "name": name, "email": email, "role": "candidate"}
+            "user": {"id": user_id, "name": pending['name'], "email": email, "role": "candidate"}
         }), 201
         
     except DBIntegrityError:

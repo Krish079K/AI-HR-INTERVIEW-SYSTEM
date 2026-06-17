@@ -52,5 +52,9 @@ class Config:
     POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
     POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
     POSTGRES_DB = os.environ.get('POSTGRES_DB', 'ai_interviewer')
+    
+    # Gemini API Key
+    # Replace the empty quotes with your actual Gemini API Key
+    GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'YOUR_ACTUAL_GEMINI_KEY_HERE')
 
 

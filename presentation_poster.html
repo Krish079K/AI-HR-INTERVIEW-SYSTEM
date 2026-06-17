@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Virtual HR Interviewer - Exhibition Poster</title>
+  <!-- Google Font Outfit -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-radial: radial-gradient(circle at center, #0e122b 0%, #060814 100%);
+      --card-bg: rgba(16, 20, 38, 0.7);
+      --card-border: rgba(31, 38, 71, 0.8);
+      --text-main: #ffffff;
+      --text-muted: #8c9bbf;
+      --cyan: #00e5ff;
+      --pink: #ff007f;
+      --amber: #ffab00;
+      --purple: #7c4dff;
+      --glow-cyan: 0 0 15px rgba(0, 229, 255, 0.4);
+      --glow-pink: 0 0 15px rgba(255, 0, 127, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-radial);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 25px;
+      position: relative;
+    }
+
+    /* Outer glowing border indicator */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border: 1px solid rgba(0, 229, 255, 0.15);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* HEADER SYSTEM */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 100px;
+      margin-bottom: 15px;
+    }
+
+    .header-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .header-left {
+      width: 380px;
+    }
+
+    .header-left img {
+      width: 45px;
+      height: 45px;
+      margin-right: 15px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-left .text-group h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+    }
+
+    .header-left .text-group p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-center {
+      flex: 1;
+      margin: 0 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .header-center h1 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(to right, #ffffff, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      text-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+    }
+
+    .header-center p {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--pink);
+      letter-spacing: 4px;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      width: 380px;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .header-right img {
+      width: 45px;
+      height: 45px;
+      margin-left: 15px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-right .text-group h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+    }
+
+    .header-right .text-group p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* METADATA BAR */
+    .metadata-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(16, 20, 38, 0.4);
+      border-bottom: 1px solid rgba(31, 38, 71, 0.5);
+      border-top: 1px solid rgba(31, 38, 71, 0.5);
+      padding: 8px 30px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 15px;
+    }
+
+    .metadata-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metadata-item i {
+      color: var(--cyan);
+    }
+
+    .metadata-item span {
+      color: var(--text-main);
+    }
+
+    /* POSTER GRID LAYOUT */
+    .poster-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1.35fr 1.05fr;
+      grid-template-rows: 2.25fr 1fr;
+      gap: 20px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* CARD STRUCTURE */
+    .poster-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .poster-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 40px;
+      background: var(--cyan);
+      border-radius: 4px;
+    }
+
+    .poster-card.card-accent::before {
+      background: var(--pink);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .card-header .number {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+
+    .poster-card.card-accent .card-header .number {
+      color: var(--pink);
+    }
+
+    .card-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .card-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      min-height: 0;
+    }
+
+    /* SECTION 01: VISUAL TELEMETRY */
+    .telemetry-desc {
+      margin-bottom: 15px;
+    }
+
+    .telemetry-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 10px 15px;
+    }
+
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      font-size: 16px;
+    }
+
+    .feature-text h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .feature-text p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .pipeline-flow {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 15px;
+    }
+
+    .pipeline-flow h4 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .pipeline-step .step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255, 0, 127, 0.15);
+      border: 1px solid rgba(255, 0, 127, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--pink);
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .pipeline-step p {
+      color: var(--text-muted);
+    }
+
+    .pipeline-step p strong {
+      color: var(--text-main);
+    }
+
+    /* SECTION 02: DATABASE SCHEMA NETWORK */
+    .schema-container {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      border: 1px solid rgba(31, 38, 71, 0.5);
+      overflow: hidden;
+    }
+
+    .schema-node {
+      position: absolute;
+      width: 175px;
+      background: rgba(20, 26, 54, 0.9);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      font-size: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      z-index: 2;
+    }
+
+    .schema-node-header {
+      font-weight: 700;
+      padding: 5px 8px;
+      background: rgba(31, 38, 71, 0.6);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+    }
+
+    .schema-node-header.accent {
+      color: var(--cyan);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+    }
+
+    .schema-node-header.pink {
+      color: var(--pink);
+      border-bottom: 1px solid rgba(255, 0, 127, 0.2);
+    }
+
+    .schema-node-fields {
+      padding: 5px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .schema-field {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .schema-field.pk {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .schema-field.fk {
+      color: var(--cyan);
+    }
+
+    /* absolute node positioning matching RoomSync AI geometry */
+    #node-users { top: 20px; left: 20px; border-color: rgba(0, 229, 255, 0.3); }
+    #node-questions { top: 20px; right: 20px; border-color: rgba(255, 0, 127, 0.3); }
+    #node-interviews { top: 130px; left: 185px; border-color: var(--amber); width: 180px; }
+    #node-responses { bottom: 20px; left: 185px; border-color: var(--purple); width: 180px; }
+
+    .matching-overlay-text {
+      position: absolute;
+      top: 92px;
+      left: 175px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: rgba(6, 8, 20, 0.85);
+      border: 1px solid var(--cyan);
+      padding: 2px 6px;
+      border-radius: 10px;
+      box-shadow: var(--glow-cyan);
+      z-index: 3;
+    }
+
+    .grading-overlay-text {
+      position: absolute;
+      bottom: 105px;
+      right: 175px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--pink);
+      background: rgba(6, 8, 20, 0.85);
+      border: 1px solid var(--pink);
+      padding: 2px 6px;
+      border-radius: 10px;
+      box-shadow: var(--glow-pink);
+      z-index: 3;
+    }
+
+    /* SECTION 03: REFLECTION & SCOPE */
+    .reflection-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .reflection-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .reflection-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .reflection-icon.cyan { background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.2); color: var(--cyan); }
+    .reflection-icon.pink { background: rgba(255, 0, 127, 0.1); border: 1px solid rgba(255, 0, 127, 0.2); color: var(--pink); }
+    .reflection-icon.amber { background: rgba(255, 171, 0, 0.1); border: 1px solid rgba(255, 171, 0, 0.2); color: var(--amber); }
+    .reflection-icon.purple { background: rgba(124, 77, 255, 0.1); border: 1px solid rgba(124, 77, 255, 0.2); color: var(--purple); }
+
+    .reflection-text h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .reflection-text p {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* SECTION 04: WEIGHTED SCORING INDEX */
+    .scoring-index-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .donut-chart-box {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+
+    .donut-chart {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--cyan) 0% 40%, 
+        var(--pink) 40% 65%, 
+        var(--amber) 65% 85%, 
+        var(--purple) 85% 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .donut-center {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #090c1f; /* matching average card background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .donut-center span.value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .donut-center span.label {
+      font-size: 8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .scoring-legend {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .legend-text {
+      color: var(--text-muted);
+    }
+
+    .legend-text strong {
+      color: var(--text-main);
+    }
+
+    /* SECTION 05: COSINE SIMILARITY LOGIC */
+    .similarity-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      gap: 15px;
+    }
+
+    .formula-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .formula-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--cyan);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .formula-card.pink {
+      color: var(--pink);
+    }
+
+    .formula-desc {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .venn-diagram-box {
+      position: relative;
+      width: 120px;
+      height: 100px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .venn-circle {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .venn-circle.user {
+      left: 12px;
+      background: rgba(0, 229, 255, 0.15);
+      border: 1.5px solid var(--cyan);
+      color: var(--cyan);
+      align-items: center;
+      justify-content: flex-start;
+      padding-left: 10px;
+    }
+
+    .venn-circle.ideal {
+      right: 12px;
+      background: rgba(255, 0, 127, 0.15);
+      border: 1.5px solid var(--pink);
+      color: var(--pink);
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+    }
+
+    .venn-intersection {
+      position: absolute;
+      width: 26px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50% / 50%;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    /* SECTION 06: DEPLOYMENT ARCHITECTURE */
+    .deploy-container {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      gap: 15px;
+    }
+
+    .deploy-flow {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .deploy-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .deploy-step i {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+    }
+
+    .deploy-step.client i { color: var(--cyan); }
+    .deploy-step.proxy i { color: var(--pink); }
+    .deploy-step.backend i { color: var(--amber); }
+
+    .deploy-step span.lbl {
+      font-weight: 700;
+      color: var(--text-main);
+      width: 60px;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .deploy-step span.val {
+      color: var(--text-muted);
+      flex: 1;
+      text-align: right;
+    }
+
+    .qr-card-box {
+      width: 125px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      text-align: center;
+    }
+
+    .qr-placeholder {
+      width: 64px;
+      height: 64px;
+      background: white;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .qr-placeholder svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .qr-link {
+      font-weight: 700;
+      color: var(--cyan);
+      margin-top: 3px;
+      letter-spacing: 0.1px;
+      word-break: break-all;
+      display: block;
+    }
+
+    /* FOOTER BAR */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+    }
+
+    footer .references {
+      display: flex;
+      gap: 15px;
+    }
+
+    footer .references span strong {
+      color: var(--text-main);
+    }
+
+    footer .authors {
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    footer .authors strong {
+      color: var(--pink);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-card header-left">
+      <img src="./images/logo_left.png" alt="MIT Mysore Logo">
+      <div class="text-group">
+        <h2>Maharaja Institute of Technology</h2>
+        <p>Mysore, Karnataka</p>
+      </div>
+    </div>
+    <div class="header-center">
+      <h1>AI Virtual HR Interviewer</h1>
+      <p>Intelligent Candidate Screening Platform</p>
+    </div>
+    <div class="header-card header-right">
+      <div class="text-group">
+        <h2>Department of CSE</h2>
+        <p>Artificial Intelligence (2025-26)</p>
+      </div>
+      <img src="./images/logo_right.png" alt="Department of CSE Logo">
+    </div>
+  </header>
+
+  <!-- METADATA BAR -->
+  <div class="metadata-bar">
+    <div class="metadata-item">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>Guided By:</span> CSE AI Faculty Coordinators
+    </div>
+    <div class="metadata-item">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Subject:</span> AI Interviewer Project (Semester VIII)
+    </div>
+    <div class="metadata-item">
+      <i class="fa-solid fa-building"></i>
+      <span>Institution:</span> Maharaja Institute of Technology Mysore
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="poster-grid">
+
+    <!-- 01 Visual Telemetry & Analysis -->
+    <div class="poster-card">
+      <div class="card-header">
+        <span class="number">01</span>
+        <h3>Visual Telemetry & Analysis</h3>
+      </div>
+      <div class="card-content">
+        <p class="telemetry-desc">
+          AI Interviewer tracks candidate expressions, gaze, and vocal metrics during live interview rounds. The visual engine generates real-time telemetry overlays and emotion vector distributions.
+        </p>
+        <div class="telemetry-features">
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
+            <div class="feature-text">
+              <h4>Visual Attention Tracking</h4>
+              <p>Calculates live gaze orientation and eye-contact ratios.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fa-solid fa-face-smile"></i></div>
+            <div class="feature-text">
+              <h4>Facial Emotion Profiling</h4>
+              <p>Tracks micro-expressions (happy, neutral, surprise, sad, etc.).</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fa-solid fa-keyboard"></i></div>
+            <div class="feature-text">
+              <h4>Dynamic Textarea Fallback</h4>
+              <p>Provides manual input overrides if mic/camera capture is restricted.</p>
+            </div>
+          </div>
+        </div>
+        <div class="pipeline-flow">
+          <h4>AI Processing Pipeline</h4>
+          <div class="pipeline-step">
+            <span class="step-num">1</span>
+            <p><strong>Webcam/Mic Authorization</strong>: Request browser media permissions for candidate capture.</p>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">2</span>
+            <p><strong>Real-time Telemetry Processing</strong>: Stream video frames to visual tracking adapters.</p>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">3</span>
+            <p><strong>Vocal & Keyword Grading</strong>: Transcribe speech, measure WPM, and match semantic overlap.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 Relational Database Schema -->
+    <div class="poster-card card-accent">
+      <div class="card-header">
+        <span class="number">02</span>
+        <h3>Database Schema & Candidate Journey</h3>
+      </div>
+      <div class="card-content" style="justify-content: stretch;">
+        <div class="schema-container">
+          <!-- SVG Glow Paths -->
+          <svg style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1;">
+            <defs>
+              <linearGradient id="cyan-pink" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.8" />
+                <stop offset="100%" stop-color="#ff007f" stop-opacity="0.8" />
+              </linearGradient>
+              <linearGradient id="pink-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff007f" stop-opacity="0.8" />
+                <stop offset="100%" stop-color="#7c4dff" stop-opacity="0.8" />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <!-- Users -> Interviews -->
+            <path d="M 107,113 L 185,155" stroke="url(#cyan-pink)" stroke-width="2" fill="none" filter="url(#glow)" stroke-dasharray="3,3" />
+            <!-- Questions -> Responses -->
+            <path d="M 370,113 L 275,230" stroke="url(#pink-purple)" stroke-width="2" fill="none" filter="url(#glow)" />
+            <!-- Interviews -> Responses -->
+            <path d="M 275,200 L 275,230" stroke="var(--amber)" stroke-width="2" fill="none" filter="url(#glow)" />
+            <!-- Users -> Responses link -->
+            <path d="M 107,113 L 185,250" stroke="var(--cyan)" stroke-width="1.5" fill="none" opacity="0.3" />
+          </svg>
+
+          <!-- Node: Users -->
+          <div class="schema-node" id="node-users">
+            <div class="schema-node-header accent">
+              <span>users</span>
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="schema-node-fields">
+              <div class="schema-field pk"><span>id</span><span>INT</span></div>
+              <div class="schema-field"><span>name</span><span>VARCHAR</span></div>
+              <div class="schema-field"><span>email</span><span>VARCHAR</span></div>
+              <div class="schema-field"><span>password_hash</span><span>VARCHAR</span></div>
+            </div>
+          </div>
+
+          <!-- Overlay: Matching -->
+          <div class="matching-overlay-text">
+            <span>SESSION START</span>
+          </div>
+
+          <!-- Node: Questions -->
+          <div class="schema-node" id="node-questions">
+            <div class="schema-node-header pink">
+              <span>questions</span>
+              <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <div class="schema-node-fields">
+              <div class="schema-field pk"><span>id</span><span>INT</span></div>
+              <div class="schema-field"><span>category</span><span>VARCHAR</span></div>
+              <div class="schema-field"><span>question_text</span><span>TEXT</span></div>
+              <div class="schema-field"><span>keywords</span><span>VARCHAR</span></div>
+            </div>
+          </div>
+
+          <!-- Node: Interviews -->
+          <div class="schema-node" id="node-interviews">
+            <div class="schema-node-header" style="color: var(--amber);">
+              <span>interviews</span>
+              <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+            <div class="schema-node-fields">
+              <div class="schema-field pk"><span>id</span><span>INT</span></div>
+              <div class="schema-field fk"><span>user_id</span><span>INT</span></div>
+              <div class="schema-field"><span>category</span><span>VARCHAR</span></div>
+              <div class="schema-field"><span>overall_score</span><span>DOUBLE</span></div>
+              <div class="schema-field"><span>status</span><span>VARCHAR</span></div>
+            </div>
+          </div>
+
+          <!-- Overlay: Grading -->
+          <div class="grading-overlay-text">
+            <span>NLP GRADED</span>
+          </div>
+
+          <!-- Node: Responses -->
+          <div class="schema-node" id="node-responses">
+            <div class="schema-node-header" style="color: var(--purple);">
+              <span>responses</span>
+              <i class="fa-solid fa-microphone"></i>
+            </div>
+            <div class="schema-node-fields">
+              <div class="schema-field pk"><span>id</span><span>INT</span></div>
+              <div class="schema-field fk"><span>interview_id</span><span>INT</span></div>
+              <div class="schema-field fk"><span>question_id</span><span>INT</span></div>
+              <div class="schema-field"><span>speaking_speed</span><span>DOUBLE</span></div>
+              <div class="schema-field"><span>technical_score</span><span>DOUBLE</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 Reflection & Scope -->
+    <div class="poster-card">
+      <div class="card-header">
+        <span class="number">03</span>
+        <h3>Reflection & Scope</h3>
+      </div>
+      <div class="card-content">
+        <div class="reflection-grid">
+          <div class="reflection-item">
+            <div class="reflection-icon cyan"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="reflection-text">
+              <h4>Key Advantages</h4>
+              <p>Eliminates reviewer bias, providing standardized objective scoring. Features a resilient cloud backend architecture with lightweight SQLite database local fallbacks.</p>
+            </div>
+          </div>
+          <div class="reflection-item">
+            <div class="reflection-icon pink"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="reflection-text">
+              <h4>System Limitations</h4>
+              <p>Relies on client-side text extraction when hosting environments restrict API requests. Requires a stable video stream for eye-gaze tracking metrics.</p>
+            </div>
+          </div>
+          <div class="reflection-item">
+            <div class="reflection-icon amber"><i class="fa-solid fa-rocket"></i></div>
+            <div class="reflection-text">
+              <h4>Future Scope</h4>
+              <p>Integrating local Hugging Face LLM models for deeper situational assessments. Adding candidate voice sentiment analysis using small acoustic classifiers.</p>
+            </div>
+          </div>
+          <div class="reflection-item">
+            <div class="reflection-icon purple"><i class="fa-solid fa-network-wired"></i></div>
+            <div class="reflection-text">
+              <h4>System Integration</h4>
+              <p>Built with modular Flask Blueprint routes, enabling seamless plug-and-play onboarding of institutional student databases and management dashboards.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 Weighted capability scores -->
+    <div class="poster-card">
+      <div class="card-header">
+        <span class="number">04</span>
+        <h3>Weighted Scoring Index</h3>
+      </div>
+      <div class="card-content">
+        <div class="scoring-index-container">
+          <div class="donut-chart-box">
+            <div class="donut-chart">
+              <div class="donut-center">
+                <span class="value">100%</span>
+                <span class="label">Total</span>
+              </div>
+            </div>
+          </div>
+          <div class="scoring-legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background: var(--cyan);"></div>
+              <div class="legend-text"><strong>40%</strong> Technical</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: var(--pink);"></div>
+              <div class="legend-text"><strong>25%</strong> Comm.</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: var(--amber);"></div>
+              <div class="legend-text"><strong>20%</strong> Confidence</div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background: var(--purple);"></div>
+              <div class="legend-text"><strong>15%</strong> Eye Gaze</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 Fallback similarity logic -->
+    <div class="poster-card card-accent">
+      <div class="card-header">
+        <span class="number">05</span>
+        <h3>Fallback Similarity Logic</h3>
+      </div>
+      <div class="card-content">
+        <div class="similarity-box">
+          <div class="formula-section">
+            <div class="formula-card">
+              Cosine = (A · B) / (||A|| ||B||)
+            </div>
+            <div class="formula-card pink" style="font-size: 11px; padding: 6px;">
+              J(A, B) = |A ∩ B| / |A ∪ B|
+            </div>
+            <p class="formula-desc">
+              When network restrictions block NLTK downloads, local fallback tokenization splits candidate transcripts, matching overlap frequency against ideal answers.
+            </p>
+          </div>
+          <div class="venn-diagram-box">
+            <div class="venn-circle user">User</div>
+            <div class="venn-circle ideal">Ideal</div>
+            <div class="venn-intersection">A ∩ B</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 Serverless Full-Stack Architecture -->
+    <div class="poster-card">
+      <div class="card-header">
+        <span class="number">06</span>
+        <h3>Production Deployment Architecture</h3>
+      </div>
+      <div class="card-content">
+        <div class="deploy-container">
+          <div class="deploy-flow">
+            <div class="deploy-step client">
+              <i class="fa-brands fa-angular"></i>
+              <span class="lbl">Client Tier</span>
+              <span class="val" style="font-family: monospace; font-size: 10px; color: var(--cyan);"><a href="https://ai-hr-interview-system.vercel.app" target="_blank" style="color: inherit; text-decoration: none;">ai-hr-interview-system.vercel.app</a></span>
+            </div>
+            <div class="deploy-step proxy">
+              <i class="fa-solid fa-shuffle"></i>
+              <span class="lbl">Proxy Tier</span>
+              <span class="val">Vercel Proxy Rewrites</span>
+            </div>
+            <div class="deploy-step backend">
+              <i class="fa-brands fa-python"></i>
+              <span class="lbl">Server Tier</span>
+              <span class="val" style="font-family: monospace; font-size: 9px; color: var(--amber);"><a href="https://krishnakumar0507.pythonanywhere.com" target="_blank" style="color: inherit; text-decoration: none;">krishnakumar0507.pythonanywhere.com</a></span>
+            </div>
+            <div class="deploy-step" style="border-color: rgba(124, 77, 255, 0.4);">
+              <i class="fa-solid fa-database" style="color: var(--purple);"></i>
+              <span class="lbl" style="color: var(--purple);">Storage Tier</span>
+              <span class="val">SQLite Database File</span>
+            </div>
+          </div>
+          <div class="qr-card-box">
+            <div class="qr-placeholder" style="margin-bottom: 5px;">
+              <img src="./images/qr_code.png" style="width: 100%; height: 100%; object-fit: contain;" alt="App QR Code">
+            </div>
+            <span class="qr-link" style="color: var(--cyan); font-size: 7.5px; line-height: 1.1;"><a href="https://ai-hr-interview-system.vercel.app" target="_blank" style="color: inherit; text-decoration: none;">ai-hr-interview-system.vercel.app</a></span>
+            <span class="qr-link" style="color: var(--amber); font-size: 7px; line-height: 1.1; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 4px;"><a href="https://krishnakumar0507.pythonanywhere.com" target="_blank" style="color: inherit; text-decoration: none;">krishnakumar0507.pythonanywhere.com</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="references">
+      <span>Key References: [1] Cosine Similarity Vector Matching. [2] OpenCV Eye Gaze Landmark Analysis. [3] WSGI Deployments.</span>
+    </div>
+    <div class="authors">
+      Presented By: <strong>Gowda Krishna Kumar</strong> | Maharaja Institute of Technology Mysore, Dept. of CSE (AI)
+    </div>
+  </footer>
+
+</body>
+</html>

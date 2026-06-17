@@ -8,7 +8,11 @@ import { environment } from '../../environments/environment';
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/auth`;
+  
+  get apiUrl(): string {
+    const customUrl = localStorage.getItem('customApiUrl');
+    return `${customUrl || environment.apiUrl}/auth`;
+  }
   
   private userSubject = new BehaviorSubject<any>(null);
   public user$ = this.userSubject.asObservable();
@@ -29,7 +33,11 @@ export class AuthService {
   }
 
   register(name: string, email: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/register`, { name, email, password }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/register`, { name, email, password });
+  }
+
+  registerVerify(email: string, code: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register-verify`, { email, code }).pipe(
       tap(res => this.handleSession(res))
     );
   }

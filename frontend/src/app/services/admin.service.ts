@@ -8,7 +8,11 @@ import { environment } from '../../environments/environment';
 })
 export class AdminService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/admin`;
+  
+  get apiUrl(): string {
+    const customUrl = localStorage.getItem('customApiUrl');
+    return `${customUrl || environment.apiUrl}/admin`;
+  }
 
   getQuestions(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/questions`);

@@ -26,21 +26,21 @@ except ImportError:
 # Ensure NLTK data is downloaded
 try:
     nltk.data.find('tokenizers/punkt')
-except LookupError:
+except Exception:
     try:
         nltk.download('punkt', quiet=True)
     except Exception as e:
         print(f"Warning: Failed to download NLTK tokenizers/punkt: {e}")
 try:
     nltk.data.find('tokenizers/punkt_tab')
-except LookupError:
+except Exception:
     try:
         nltk.download('punkt_tab', quiet=True)
     except Exception as e:
         print(f"Warning: Failed to download NLTK tokenizers/punkt_tab: {e}")
 try:
     nltk.data.find('corpora/stopwords')
-except LookupError:
+except Exception:
     try:
         nltk.download('stopwords', quiet=True)
     except Exception as e:

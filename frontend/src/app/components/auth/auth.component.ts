@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-auth',
@@ -18,10 +19,15 @@ export class AuthComponent {
 
   isLoginMode = true;
   forgotMode: 'request' | 'reset' | 'none' = 'none';
+  isRegisterVerifyMode = false;
+  registerOtp = '';
+  pendingRegisterEmail = '';
   errorMessage: string | null = null;
   successMessage: string | null = null;
   mockedCodeNotice: string | null = null;
   loading = false;
+  showApiSettings = false;
+  customApiUrl = '';
 
   // Recovery Form Fields
   forgotEmail = '';
@@ -37,6 +43,8 @@ export class AuthComponent {
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
+    this.isRegisterVerifyMode = false;
+    this.registerOtp = '';
     this.errorMessage = null;
     this.successMessage = null;
     this.mockedCodeNotice = null;
@@ -129,8 +137,44 @@ export class AuthComponent {
     });
   }
 
+  cancelRegisterVerify() {
+    this.isRegisterVerifyMode = false;
+    this.registerOtp = '';
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.mockedCodeNotice = null;
+  }
+
+  toggleApiSettings() {
+    this.showApiSettings = !this.showApiSettings;
+    if (this.showApiSettings) {
+      this.customApiUrl = localStorage.getItem('customApiUrl') || environment.apiUrl;
+    }
+  }
+
+  saveApiSettings() {
+    if (this.customApiUrl && this.customApiUrl.trim()) {
+      localStorage.setItem('customApiUrl', this.customApiUrl.trim());
+      this.successMessage = "Backend URL updated. Reloading page...";
+      setTimeout(() => {
+        window.location.reload();
+      }, 1200);
+    } else {
+      this.resetApiSettings();
+    }
+  }
+
+  resetApiSettings() {
+    localStorage.removeItem('customApiUrl');
+    this.customApiUrl = environment.apiUrl;
+    this.successMessage = "Backend URL reset to default. Reloading page...";
+    setTimeout(() => {
+      window.location.reload();
+    }, 1200);
+  }
+
   onSubmit() {
-    if (this.authForm.invalid) {
+    if (this.authForm.invalid && !this.isRegisterVerifyMode) {
       this.errorMessage = "Please enter valid credentials.";
       return;
     }
@@ -161,20 +205,48 @@ export class AuthComponent {
         }
       });
     } else {
-      this.authService.register(name, email, password).subscribe({
-        next: () => {
-          this.loading = false;
-          this.router.navigate(['/dashboard']);
-        },
-        error: (err) => {
-          this.loading = false;
-          if (err.status === 0 || err.status === 502 || err.status === 504 || err.status === 503) {
-            this.errorMessage = "Unable to connect to the backend server. Please check your backend deployment.";
-          } else {
-            this.errorMessage = err.error?.message || "Signup failed. Email might already be in use.";
+      if (!this.isRegisterVerifyMode) {
+        this.authService.register(name, email, password).subscribe({
+          next: (res) => {
+            this.loading = false;
+            this.isRegisterVerifyMode = true;
+            this.pendingRegisterEmail = email;
+            this.successMessage = "A verification code has been simulated/sent to your email address.";
+            if (!res.email_sent) {
+              this.mockedCodeNotice = `[Mock Dev Mode] Your 6-digit signup verification code is: ${res.code}`;
+            }
+          },
+          error: (err) => {
+            this.loading = false;
+            if (err.status === 0 || err.status === 502 || err.status === 504 || err.status === 503) {
+              this.errorMessage = "Unable to connect to the backend server. Please check your backend deployment.";
+            } else {
+              this.errorMessage = err.error?.message || "Signup failed. Email might already be in use.";
+            }
           }
+        });
+      } else {
+        if (!this.registerOtp || this.registerOtp.length !== 6) {
+          this.loading = false;
+          this.errorMessage = "Please enter a valid 6-digit verification code.";
+          return;
         }
-      });
+        this.authService.registerVerify(this.pendingRegisterEmail, this.registerOtp).subscribe({
+          next: () => {
+            this.loading = false;
+            this.isRegisterVerifyMode = false;
+            this.router.navigate(['/dashboard']);
+          },
+          error: (err) => {
+            this.loading = false;
+            if (err.status === 0 || err.status === 502 || err.status === 504 || err.status === 503) {
+              this.errorMessage = "Unable to connect to the backend server. Please check your backend deployment.";
+            } else {
+              this.errorMessage = err.error?.message || "Verification failed. Invalid or expired code.";
+            }
+          }
+        });
+      }
     }
   }
 }
